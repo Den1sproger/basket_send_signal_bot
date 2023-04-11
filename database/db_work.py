@@ -7,19 +7,22 @@ from .db_config import *
 class Database:
     """The class responsible for working with the database of subscribes"""
 
-    def __init__(self):
+    def connect_to_db(self):
         # Connect to the database
         # Подключение к базе данных
-        self.connection = pymysql.connect(
+        connection = pymysql.connect(
             host=host, user=user, port=3306,
             password=password, database=db_name,
             cursorclass=pymysql.cursors.DictCursor
         )
+        return connection
 
 
     def get_mail_lists(self) -> list[str]:
-        with self.connection:
-            with self.connection.cursor() as cursor:
+        connection = self.connect_to_db()
+
+        with connection:
+            with connection.cursor() as cursor:
                 insert_query = 'SELECT list_name FROM mail_lists'
                 cursor.execute(insert_query)
 
@@ -29,8 +32,10 @@ class Database:
     
 
     def get_chat_id_by_subscribes(self, subscribes: list[str]) -> list[int]:
-        with self.connection:
-            with self.connection.cursor() as cursor:
+        connection = self.connect_to_db()
+
+        with connection:
+            with connection.cursor() as cursor:
                 
                 subscribes = f'{subscribes}'.replace('[', '(').replace(']', ')')
                 insert_query = f'SELECT id FROM mail_lists WHERE list_name IN {subscribes}'
@@ -49,3 +54,15 @@ class Database:
                 data = [row['chat_id'] for row in cursor.fetchall()]
 
         return data
+    
+
+    def get_one_data_cell(self, query: str, column: str = 'nickname') -> int:
+        connection = self.connect_to_db()
+
+        with connection:
+            with connection.cursor() as cursor:
+                cursor.execute(query)
+
+                row = cursor.fetchall()[0]
+
+        return row[column]

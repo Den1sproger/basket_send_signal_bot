@@ -2,6 +2,7 @@ from aiogram import types
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
+from aiogram.utils.exceptions import ChatNotFound
 from ...bot_config import dp, bot, ADMIN
 from database import Database
 from ...keyboards import get_mail_lists_kb
@@ -61,9 +62,17 @@ async def mailing(message: types.Message, state=FSMContext) -> None:
         users = db.get_chat_id_by_subscribes(mail_lists)
 
         for user in users:
-            await bot.send_message(
-                chat_id=user, text=edit_text
-            )
+            try:
+                await bot.send_message(
+                    chat_id=user, text=edit_text
+                )
+            except ChatNotFound:
+                username = db.get_one_data_cell(
+                    f'SELECT nickname FROM subscribers WHERE chat_id = {user};'
+                )
+                await message.answer(
+                    f'@{username} не создал чат с ботом'
+                )
 
         edit_text = ''
         mail_lists.clear()

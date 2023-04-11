@@ -1,7 +1,7 @@
 from aiogram import executor
 from telegram_bot import dp
 from telegram_bot.handlers.start.start import *
-from telegram_bot.handlers.admin_panel.signal import *
+from telegram_bot.handlers.admin.signal import *
 
 
 if __name__ == '__main__':
