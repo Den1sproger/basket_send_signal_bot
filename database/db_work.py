@@ -66,3 +66,12 @@ class Database:
                 row = cursor.fetchall()[0]
 
         return row[column]
+    
+
+    def action(self, query: str) -> None:
+        connection = self.connect_to_db()
+
+        with connection:
+            with connection.cursor() as cursor:
+                cursor.execute(query)
+            connection.commit()

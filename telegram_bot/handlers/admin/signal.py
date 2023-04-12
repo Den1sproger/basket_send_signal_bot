@@ -1,8 +1,8 @@
 from aiogram import types
-from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from aiogram.utils.exceptions import ChatNotFound
+from .states import ProfileStatesGroup
 from ...bot_config import dp, bot, ADMIN
 from database import Database
 from ...keyboards import get_mail_lists_kb
@@ -11,11 +11,6 @@ from ...keyboards import get_mail_lists_kb
 
 edit_text = ''
 mail_lists = []
-
-
-class ProfileStatesGroup(StatesGroup):
-    get_edit_message = State()
-    get_mail_lists = State()
 
 
 @dp.callback_query_handler(lambda callback: callback.data == 'edit_bet_signal')
