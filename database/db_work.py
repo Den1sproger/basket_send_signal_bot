@@ -88,3 +88,25 @@ class Database:
                 row = cursor.fetchall()[0]
 
         return values.get(row[insert_query[7:-1]])
+    
+
+    def is_maillist_in_user(self, user_id: int, mail_lists_id: list[int]) -> bool:
+        connection = self.connect_to_db()
+
+        with connection:
+            with connection.cursor() as cursor:
+                insert_query = f"SELECT list_id FROM bundle WHERE user_id = {user_id}"
+                cursor.execute(insert_query)
+
+                rows = cursor.fetchall()
+
+        lists_id = [row['list_id'] for row in rows]
+        intersection = list(set(mail_lists_id) & set(lists_id))
+
+        if intersection: return True
+        else: return False
+        
+    
+    def __del__(self) -> int:
+        # Destructor
+        return 1

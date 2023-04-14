@@ -46,25 +46,39 @@ async def again(message: types.Message) -> None:
 @dp.message_handler(Text(equals='стоп'), state=ProfileStatesGroup.get_mail_lists_for_user)
 async def stop_get_lists(message: types.Message, state=FSMContext) -> None:
     global mail_lists, current_user_id
-    
-    await state.finish()
 
     db = Database()
 
+    lists_id = []
     for item in mail_lists:
         list_id = db.get_one_data_cell(
             query=f"SELECT id FROM mail_lists WHERE list_name = '{item}';",
             column='id'
         )
-        db.action(
-            f"INSERT INTO bundle VALUES ({current_user_id}, {list_id});"
-        )
+        lists_id.append(list_id)
 
-    await message.answer(
-        "✅Пользователь успешно подписан на рассылку",
-        reply_markup=types.ReplyKeyboardRemove()
-    )
-    current_user_id = 0
+    if db.is_maillist_in_user(current_user_id, lists_id):
+        await message.answer(
+            "❌❌Все или один из указанных вами списков уже есть в подписках этого пользователя" \
+            " Попробуйте еще раз указать списки рассылки"
+        )
+    else:
+        for item in mail_lists:
+            list_id = db.get_one_data_cell(
+                query=f"SELECT id FROM mail_lists WHERE list_name = '{item}';",
+                column='id'
+            )
+            db.action(
+                f"INSERT INTO bundle VALUES ({current_user_id}, {list_id});"
+            )
+            
+        await state.finish()
+        await message.answer(
+            "✅Пользователь успешно подписан на рассылку",
+            reply_markup=types.ReplyKeyboardRemove()
+        )
+        current_user_id = 0
+        
     mail_lists.clear()
 
 
