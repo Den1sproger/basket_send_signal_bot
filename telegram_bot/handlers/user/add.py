@@ -13,18 +13,24 @@ async def add_user(message: types.Message) -> None:
         if not username:
             username = message.from_user.full_name
 
-        query = f"INSERT INTO subscribers (nickname, chat_id) VALUES ('{username}', {chat_id});"
-
         db = Database()
-        db.action(query)
-        
+
+        additional_text = ''
+
+        if not db.is_user_in_db(chat_id):
+            db.action(
+                f"INSERT INTO subscribers (nickname, chat_id) VALUES ('{username}', {chat_id});"
+            )
+        else:
+            additional_text += ' (уже есть в базе)'
+
         user_id = db.get_one_data_cell(
-            query="SELECT MAX(id) FROM subscribers;",
-            column="MAX(id)"
+            query=f"SELECT id FROM subscribers WHERE chat_id = {chat_id};",
+            column="id"
         )
 
         await bot.send_message(
             chat_id=ADMIN,
-            text=f'{user_id} @{username} подана заявка на подписку',
+            text=f'{user_id} @{username} подана заявка на подписку{additional_text}',
             reply_markup=add_to_mail_ikb
         )

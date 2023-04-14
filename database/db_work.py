@@ -75,3 +75,16 @@ class Database:
             with connection.cursor() as cursor:
                 cursor.execute(query)
             connection.commit()
+
+
+    def is_user_in_db(self, chat_id: int) -> bool:
+        values = {0: False, 1: True}
+        connection = self.connect_to_db()
+        with connection:
+            with connection.cursor() as cursor:
+                insert_query = f"SELECT EXISTS(SELECT * FROM subscribers WHERE chat_id = {chat_id});"
+                cursor.execute(insert_query)
+
+                row = cursor.fetchall()[0]
+
+        return values.get(row[insert_query[7:-1]])
