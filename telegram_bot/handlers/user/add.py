@@ -19,13 +19,13 @@ async def add_user(message: types.Message) -> None:
 
         if not db.is_user_in_db(chat_id):
             db.action(
-                f"INSERT INTO subscribers (nickname, chat_id) VALUES ('{username}', {chat_id});"
+                f"INSERT INTO subscribers (nickname, chat_id) VALUES ('{username}', '{chat_id}');"
             )
         else:
             additional_text += ' (уже есть в базе)'
 
         user_id = db.get_one_data_cell(
-            query=f"SELECT id FROM subscribers WHERE chat_id = {chat_id};",
+            query=f"SELECT id FROM subscribers WHERE chat_id = '{chat_id}';",
             column="id"
         )
 

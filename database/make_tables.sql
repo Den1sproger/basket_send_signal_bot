@@ -4,8 +4,7 @@ USE telegram_mailing;
 CREATE TABLE mail_lists
 (
 	id serial PRIMARY KEY,
-    list_name varchar(255) NOT NULL,
-    keyword varchar(255) NOT NULL
+    list_name varchar(255) NOT NULL
 );
 
 CREATE TABLE subscribers

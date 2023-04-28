@@ -2,7 +2,7 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from aiogram.utils.exceptions import ChatNotFound
-from .states import ProfileStatesGroup
+from .states import _ProfileStatesGroup
 from ...bot_config import dp, bot, ADMIN
 from database import Database
 from ...keyboards import get_mail_lists_kb
@@ -15,37 +15,41 @@ mail_lists = []
 
 @dp.callback_query_handler(lambda callback: callback.data == 'edit_bet_signal')
 async def edit_bet_signal(callback: types.CallbackQuery) -> None:
-    await ProfileStatesGroup.get_edit_message.set()
+    await callback.answer('Отправьте отредактированный текст')
+    await _ProfileStatesGroup.get_edit_message.set()
     await bot.send_message(
         chat_id=ADMIN, text='Отправьте отредактированный текст'
     )
 
 
-@dp.message_handler(state=ProfileStatesGroup.get_edit_message)
+@dp.message_handler(state=_ProfileStatesGroup.get_edit_message)
 async def get_edit_message(message: types.Message) -> None:
     global edit_text
     edit_text = message.text
 
     db = Database()
 
-    await ProfileStatesGroup.get_mail_lists.set()
+    await _ProfileStatesGroup.get_mail_lists.set()
     await message.answer(
         '✅Текст изменен✅\nВыбирайте списки, если хотите закончить, жмите кнопку <b>стоп</b>',
         parse_mode='HTML',
         reply_markup=get_mail_lists_kb(
-            mail_lists=db.get_mail_lists(), stop='стоп'
+            mail_lists=db.get_all_table_elements(
+                query='SELECT list_name FROM mail_lists;', element='list_name'
+            ),
+            stop='стоп'
         )
     )
 
 
-@dp.message_handler(Text(equals='заново'), state=ProfileStatesGroup.get_mail_lists)
+@dp.message_handler(Text(equals='заново'), state=_ProfileStatesGroup.get_mail_lists)
 async def again(message: types.Message) -> None:
     global mail_lists
     mail_lists.clear()
     await message.answer('Выбирайте списки сначала')
 
     
-@dp.message_handler(Text(equals='стоп'), state=ProfileStatesGroup.get_mail_lists)
+@dp.message_handler(Text(equals='стоп'), state=_ProfileStatesGroup.get_mail_lists)
 async def mailing(message: types.Message, state=FSMContext) -> None:
     global edit_text, mail_lists
 
@@ -59,11 +63,11 @@ async def mailing(message: types.Message, state=FSMContext) -> None:
         for user in users:
             try:
                 await bot.send_message(
-                    chat_id=user, text=edit_text
+                    chat_id=int(user), text=edit_text
                 )
             except ChatNotFound:
                 username = db.get_one_data_cell(
-                    f'SELECT nickname FROM subscribers WHERE chat_id = {user};'
+                    f"SELECT nickname FROM subscribers WHERE chat_id = '{user}';"
                 )
                 await message.answer(
                     f'@{username} не создал чат с ботом'
@@ -78,7 +82,7 @@ async def mailing(message: types.Message, state=FSMContext) -> None:
         )
 
 
-@dp.message_handler(state=ProfileStatesGroup.get_mail_lists)
+@dp.message_handler(state=_ProfileStatesGroup.get_mail_lists)
 async def add_mail_list(message: types.Message) -> None:
     global mail_lists
     mail_lists.append(message.text)
@@ -96,12 +100,15 @@ async def send_bet_signal(callback: types.CallbackQuery) -> None:
 
     db = Database()
 
-    await ProfileStatesGroup.get_mail_lists.set()
+    await _ProfileStatesGroup.get_mail_lists.set()
     await bot.send_message(
         chat_id=ADMIN,
         text='Выбирайте списки, если хотите закончить, жмите кнопку <b>стоп</b>',
         parse_mode='HTML',
         reply_markup=get_mail_lists_kb(
-            mail_lists=db.get_mail_lists(), stop='стоп'
+            mail_lists=db.get_all_table_elements(
+                query='SELECT list_name FROM mail_lists;', element='list_name'
+            ),
+            stop='стоп'
         )
     )

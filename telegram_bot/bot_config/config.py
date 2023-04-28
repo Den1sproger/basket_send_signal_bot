@@ -7,7 +7,7 @@ from dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv())
 
-TOKEN = os.getenv('TOKEN')
-ADMIN = os.getenv('ADMIN')
+TOKEN = os.getenv('SEND_TOKEN')
+ADMIN = int(os.getenv('ADMIN'))
 bot = Bot(TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
