@@ -11,6 +11,8 @@ from database import Database
 
 mail_lists = []
 current_user_id: int
+current_chat_id: str
+current_username: str
 
 
 
@@ -256,9 +258,40 @@ async def add_user_in_db(callback: types.CallbackQuery) -> None:
     await callback.answer('Введите имя или юзернейм пользователя')
     await callback.message.answer('Введите имя или юзернейм пользователя')
 
+    
+@dp.message_handler(state=_ProfileStatesGroup.get_username, user_id=ADMIN)
+async def get_username(message: types.Message) -> None:
+    global current_username
+    current_username = message.text
+    await _ProfileStatesGroup.get_chat_id.set()
+    await message.answer('Введите chat id пользователя')
 
-@dp.message_handler(state=_ProfileStatesGroup.get_username)
-async def get_username(message: types.Message, state: FSMContext) -> None:
+
+@dp.message_handler(lambda message: not message.text.isdigit(),
+                    state=_ProfileStatesGroup.get_chat_id, user_id=ADMIN)
+async def check_chat_id(message: types.Message) -> None:
+    await message.reply('❌❌Это не chat id, нужна цифра')
+
+
+@dp.message_handler(state=_ProfileStatesGroup.get_chat_id, user_id=ADMIN)
+async def get_chat_id(message: types.Message, state: FSMContext) -> None:
+    global current_chat_id, current_username
+    current_chat_id = message.text
+    await state.finish()
+
+    db = Database()
+
+    if not db.is_user_in_db(current_chat_id):
+        db.action(
+            f"INSERT INTO subscribers (nickname, chat_id) VALUES ('{current_username}', '{current_chat_id}');"
+        )
+        await message.answer('✅Успешно добавлен в базу')
+    else:
+        await message.answer('⚠️⚠️Пользователь с таким chat id уже есть в базе')
+
+    current_username = ''
+    current_chat_id = ''
+
     
 @dp.callback_query_handler(lambda callback: callback.data == 'unknown_user')
 async def unknown_user(callback: types.CallbackQuery) -> None:
