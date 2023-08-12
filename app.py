@@ -1,3 +1,5 @@
+import logging
+
 from aiogram import executor
 from telegram_bot import dp
 from telegram_bot.handlers.start.start import *
@@ -6,6 +8,10 @@ from telegram_bot.handlers.admin.states import *
 from telegram_bot.handlers.admin.signal import *
 from telegram_bot.handlers.admin.user_work import *
 from telegram_bot.handlers.user.add import *
+
+
+LOG_FILENAME = "/home/basket_send_signal/py_log.log"
+logging.basicConfig(level=logging.INFO, filename=LOG_FILENAME, filemode="w")
 
 
 
