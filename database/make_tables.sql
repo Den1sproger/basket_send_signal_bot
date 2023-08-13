@@ -11,7 +11,7 @@ CREATE TABLE subscribers
 (
 	id serial PRIMARY KEY,
     nickname varchar(255) NOT NULL,
-    chat_id int NOT NULL
+    chat_id varchar(50) NOT NULL
 );
 
 CREATE TABLE bundle
